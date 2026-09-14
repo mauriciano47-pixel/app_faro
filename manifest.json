@@ -1,0 +1,19 @@
+{
+  "name": "Faro - Tu Seguridad, Tu Luz",
+  "short_name": "Faro",
+  "description": "Tu app de seguridad personal y acompañamiento en tiempo real.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#07050f",
+  "theme_color": "#00e5c8",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

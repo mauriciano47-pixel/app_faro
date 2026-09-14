@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Faro – Tu Seguridad, Tu Luz</title>
+  <meta name="description" content="Faro: Aplicación de seguridad personal, alertas de emergencia SOS, falsa llamada y acompañamiento en tiempo real." />
+  <meta name="theme-color" content="#07050f" />
+  <link rel="icon" type="image/png" href="./icon.png" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Leaflet.js para el mapa (CSS + JS) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- PWA Manifest & iOS Meta Tags -->
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Faro" />
+  <link rel="apple-touch-icon" href="./icon.png" />
+  <!-- Open Graph / Redes Sociales -->
+  <meta property="og:title" content="Faro – Tu Seguridad, Tu Luz" />
+  <meta property="og:description" content="App de seguridad personal, alertas de emergencia y acompañamiento en tiempo real." />
+  <meta property="og:image" content="./icon.png" />
+  <meta property="og:type" content="website" />
+  
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+          .catch(err => console.error('Error al registrar Service Worker:', err));
+      });
+    }
+  </script>
+</head>
+<body>
+
+<!-- Partículas de fondo -->
+<div class="stars" id="stars-container"></div>
+
+<!-- Contenedor del simulador de smartphone -->
+<div class="phone-container">
+  <div class="phone-label">✦ Prototipo Interactivo · Faro App</div>
+
+  <div class="phone" id="phone">
+
+    <!-- Isla dinámica (notch) -->
+    <div class="phone-notch">
+      <div class="notch-speaker"></div>
+      <div class="notch-camera"></div>
+    </div>
+
+    <!-- Barra de estado -->
+    <div class="status-bar">
+      <span class="status-time" id="status-clock">15:18</span>
+      <div class="status-icons">
+        <!-- Señal WiFi -->
+        <svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+        <!-- Señal celular -->
+        <svg viewBox="0 0 24 24"><rect x="2" y="16" width="3" height="5" rx="1" fill="white"/><rect x="7" y="12" width="3" height="9" rx="1" fill="white"/><rect x="12" y="8" width="3" height="13" rx="1" fill="white"/><rect x="17" y="4" width="3" height="17" rx="1" fill="white"/></svg>
+        <!-- Batería -->
+        <svg viewBox="0 0 24 24"><rect x="1" y="7" width="18" height="10" rx="2" stroke="white" stroke-width="1.5" fill="none"/><rect x="3" y="9" width="11" height="6" rx="1" fill="white"/><path d="M21 10v4" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+
+    <!-- CONTENIDO DE LA APP -->
+    <div class="phone-screen">
+
+      <!-- ========== PANTALLA 1: HOME / DASHBOARD ========== -->
+      <div class="screen screen-home active" id="screen-home">
+        <div class="greeting">
+          <div class="greeting-sub">Buenas tardes,</div>
+          <div class="greeting-name">Tamara 🌟</div>
+        </div>
+
+        <!-- Estado actual -->
+        <div class="status-widget" id="home-status-widget">
+          <div class="status-dot" id="home-status-dot"></div>
+          <div class="status-text">
+            <div class="status-title" id="home-status-title">Estás segura en casa</div>
+            <div class="status-detail" id="home-status-detail">Sin rutas activas · Faros disponibles: 3</div>
+          </div>
+        </div>
+
+        <!-- Sensor de movimiento (Agitar para activar) -->
+        <div class="shake-control">
+          <div class="shake-info">
+            <span class="shake-icon">📳</span>
+            <div>
+              <div class="shake-title">S.O.S. por Movimiento</div>
+              <div class="shake-desc">Agita el celular para activar la alerta</div>
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="shake-toggle" onchange="toggleShakeDetection(this)" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Botón Power Físico (Pulsación repetida para activar) -->
+        <div class="shake-control" style="margin-top: 8px; margin-bottom: 14px;">
+          <div class="shake-info">
+            <span class="shake-icon">⚡</span>
+            <div>
+              <div class="shake-title">S.O.S. por Botón Físico</div>
+              <div class="shake-desc">Presiona 4 veces el botón de encendido</div>
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="power-toggle" onchange="togglePowerDetection(this)" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Botón SOS central -->
+        <div class="sos-wrapper">
+          <div class="sos-ring">
+            <button class="sos-btn" id="sos-btn" onclick="activarSOS()">
+              <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span class="sos-label">S.O.S.</span>
+              <span class="sos-sub">Mantén presionado 3s</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Grid acceso rápido -->
+        <div class="quick-grid">
+          <div class="quick-card ruta" onclick="irA('screen-ruta')">
+            <div class="quick-icon teal">
+              <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <div>
+              <div class="quick-title">Ruta Segura</div>
+              <div class="quick-desc">Comparte tu trayecto en tiempo real</div>
+            </div>
+          </div>
+
+          <div class="quick-card llamada" onclick="irA('screen-llamada')">
+            <div class="quick-icon violet">
+              <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38C1.58 2.3 2.36 1.32 3.44 1H6a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.09 8.91A16 16 0 0 0 15 16.91l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div>
+              <div class="quick-title">Falsa Llamada</div>
+              <div class="quick-desc">Simula una llamada para escapar</div>
+            </div>
+          </div>
+
+          <div class="quick-card alarma" onclick="activarAlarma()">
+            <div class="quick-icon amber">
+              <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div>
+              <div class="quick-title">Alarma Sonora</div>
+              <div class="quick-desc">Sirena disuasoria de alto volumen</div>
+            </div>
+          </div>
+
+          <div class="quick-card discreta" onclick="modoDiscreto()">
+            <div class="quick-icon coral">
+              <svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </div>
+            <div>
+              <div class="quick-title">Modo Discreto</div>
+              <div class="quick-desc">Alerta silenciosa sin mostrar pantalla</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== PANTALLA 2: RUTA SEGURA ========== -->
+      <div class="screen screen-ruta" id="screen-ruta">
+        <div class="ruta-top-bar">
+          <div class="section-title" style="margin-bottom:0;">📍 Ruta Segura</div>
+          <button class="gps-mode-btn" id="gps-mode-btn" onclick="toggleModoGPS()" title="Alternar entre Demo y GPS Real">
+            <span id="gps-mode-icon">🛰️</span>
+            <span id="gps-mode-text">GPS Real</span>
+          </button>
+        </div>
+
+        <!-- Mapa -->
+        <div id="mapa-ruta"></div>
+
+        <!-- Info de ruta -->
+        <div class="ruta-info-row">
+          <div class="ruta-info-card">
+            <div class="ruta-info-value" id="dist-value">1.4</div>
+            <div class="ruta-info-key">KM restantes</div>
+          </div>
+          <div class="ruta-info-card">
+            <div class="ruta-info-value" id="eta-value">18'</div>
+            <div class="ruta-info-key">ETA estimado</div>
+          </div>
+          <div class="ruta-info-card">
+            <div class="ruta-info-value" id="faros-value">3</div>
+            <div class="ruta-info-key">Faros activos</div>
+          </div>
+        </div>
+
+        <!-- Temporizador de seguridad -->
+        <div class="timer-card">
+          <div class="timer-header">
+            <span class="timer-label">⏱ TEMPORIZADOR DE SEGURIDAD</span>
+            <span id="timer-status-badge" style="font-size:10px;font-weight:700;color:var(--accent-teal);">ACTIVO</span>
+          </div>
+          <div class="timer-display" id="timer-display">20:00</div>
+          <div class="timer-progress-bar">
+            <div class="timer-progress-fill" id="timer-progress"></div>
+          </div>
+          <div class="timer-controls">
+            <button class="btn btn-primary" id="timer-toggle-btn" onclick="toggleTimer()">
+              <svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+              Pausar
+            </button>
+            <button class="btn btn-ghost" onclick="resetTimer()">
+              <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+              Reiniciar
+            </button>
+            <button class="btn btn-danger" onclick="confirmarLlegada()">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              Llegué
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== PANTALLA 3: FALSA LLAMADA ========== -->
+      <div class="screen screen-llamada" id="screen-llamada">
+        <div class="llamada-title">📞 Falsa Llamada</div>
+        <div class="llamada-desc">Simula una llamada entrante real para escapar de situaciones incómodas sin levantar sospechas.</div>
+
+        <!-- Selector de retraso -->
+        <div class="delay-config" style="width:100%;margin-bottom:16px;">
+          <label>¿Cuándo llama?</label>
+          <div class="delay-options">
+            <div class="delay-opt selected" onclick="selDelay(this, 0)">Ahora</div>
+            <div class="delay-opt" onclick="selDelay(this, 30)">30s</div>
+            <div class="delay-opt" onclick="selDelay(this, 60)">1 min</div>
+            <div class="delay-opt" onclick="selDelay(this, 120)">2 min</div>
+          </div>
+        </div>
+
+        <!-- Contactos para simular llamada -->
+        <div class="contact-call-grid">
+          <div class="contact-call-card" onclick="iniciarFalsaLlamada('Mamá', 'av1', '👩')">
+            <div class="contact-avatar av1">👩</div>
+            <div class="contact-name-small">Mamá</div>
+          </div>
+          <div class="contact-call-card" onclick="iniciarFalsaLlamada('Sofía', 'av2', '👧')">
+            <div class="contact-avatar av2">👧</div>
+            <div class="contact-name-small">Sofía</div>
+          </div>
+          <div class="contact-call-card" onclick="iniciarFalsaLlamada('Pablo', 'av3', '👦')">
+            <div class="contact-avatar av3">👦</div>
+            <div class="contact-name-small">Pablo</div>
+          </div>
+        </div>
+
+        <!-- Interfaz de llamada activa -->
+        <div class="call-screen" id="call-screen">
+          <div class="call-avatar-big" id="call-avatar-emoji" style="font-size:36px;">👩</div>
+          <div class="call-contact-name" id="call-name">Mamá</div>
+          <div class="call-status" id="call-status-text">Llamada entrante…</div>
+          <div class="call-timer-display" id="call-timer" style="display:none;"></div>
+          <div class="call-actions" id="call-actions">
+            <button class="call-action-btn call-answer" onclick="contestarLlamada()">
+              <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38C1.58 2.3 2.36 1.32 3.44 1H6a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.09 8.91A16 16 0 0 0 15 16.91l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </button>
+            <button class="call-action-btn call-decline" onclick="colgarLlamada()">
+              <svg viewBox="0 0 24 24" style="transform:rotate(135deg);"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38C1.58 2.3 2.36 1.32 3.44 1H6a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.09 8.91A16 16 0 0 0 15 16.91l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </button>
+          </div>
+          <div id="call-end-actions" style="display:none;">
+            <button class="call-action-btn call-end" onclick="colgarLlamada()">
+              <svg viewBox="0 0 24 24" style="transform:rotate(135deg);"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38C1.58 2.3 2.36 1.32 3.44 1H6a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.09 8.91A16 16 0 0 0 15 16.91l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== PANTALLA 4: CONTACTOS (FAROS) ========== -->
+      <div class="screen screen-contactos" id="screen-contactos">
+        <div class="section-title">🔦 Mis Faros</div>
+
+        <div class="faro-list" id="faro-list-container">
+          <!-- Cargado dinámicamente por app.js con persistencia local -->
+        </div>
+
+        <!-- Agregar faro -->
+        <button class="add-faro-btn" onclick="abrirModalFaro()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Agregar nuevo Faro
+        </button>
+
+        <!-- Consejos de seguridad -->
+        <div class="tips-card">
+          <div class="tips-header">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            CONSEJOS DE SEGURIDAD
+          </div>
+          <div class="tip-item">
+            <div class="tip-bullet"></div>
+            <div class="tip-text">Comparte tu ruta antes de salir, no durante un problema.</div>
+          </div>
+          <div class="tip-item">
+            <div class="tip-bullet"></div>
+            <div class="tip-text">Mantén el teléfono con batería superior al 20% cuando salgas de noche.</div>
+          </div>
+          <div class="tip-item">
+            <div class="tip-bullet"></div>
+            <div class="tip-text">Memoriza el PIN de coacción: desactiva la alarma visible pero alerta a tus Faros.</div>
+          </div>
+          <div class="tip-item">
+            <div class="tip-bullet"></div>
+            <div class="tip-text">Camina por zonas iluminadas y concurridas aunque el camino sea más largo.</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /phone-screen -->
+
+    <!-- NAVEGACIÓN INFERIOR -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" id="nav-home" onclick="irA('screen-home')" data-screen="screen-home">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Inicio</span>
+      </button>
+      <button class="nav-item" id="nav-ruta" onclick="irA('screen-ruta')" data-screen="screen-ruta">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7.05 11.5 7.35 11.76a1 1 0 0 0 1.3 0C13 21.5 20 15.4 20 10a8 8 0 0 0-8-8z"/></svg>
+        <span>Ruta</span>
+      </button>
+      <button class="nav-item" id="nav-llamada" onclick="irA('screen-llamada')" data-screen="screen-llamada">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38C1.58 2.3 2.36 1.32 3.44 1H6a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.09 8.91A16 16 0 0 0 15 16.91l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span>Llamada</span>
+      </button>
+      <button class="nav-item" id="nav-contactos" onclick="irA('screen-contactos')" data-screen="screen-contactos">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Faros</span>
+      </button>
+    </nav>
+
+    <!-- OVERLAY S.O.S. ACTIVO -->
+    <div class="sos-overlay" id="sos-overlay">
+      <div class="sos-active-icon">
+        <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div class="sos-active-title">¡S.O.S. ENVIADO!</div>
+      <div class="sos-countdown" id="sos-countdown">5</div>
+      <div class="sos-active-sub" id="sos-active-sub">Tu ubicación fue enviada a tus Faros de confianza.<br/>Llegará ayuda de inmediato.</div>
+      
+      <!-- Botón para enviar alerta real por WhatsApp -->
+      <a class="sos-whatsapp-btn" id="sos-whatsapp-btn" href="#" target="_blank" rel="noopener noreferrer" onclick="enviarAlertaWhatsApp()">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+        <span>Compartir Ubicación por WhatsApp</span>
+      </a>
+
+      <button class="sos-cancel-btn" onclick="cancelarSOS()">✕ Cancelar · Estoy a salvo</button>
+    </div>
+
+    <!-- MODAL AGREGAR FARO -->
+    <div class="modal-overlay" id="modal-add-faro">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title">✨ Nuevo Faro de Confianza</div>
+          <button class="modal-close-btn" onclick="cerrarModalFaro()">✕</button>
+        </div>
+        <form id="form-add-faro" onsubmit="guardarNuevoFaro(event)">
+          <div class="form-group">
+            <label>Nombre del contacto</label>
+            <input type="text" id="faro-input-name" placeholder="Ej: Valentina" required autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label>Vínculo / Relación</label>
+            <input type="text" id="faro-input-rel" placeholder="Ej: Mejor amiga / Hermana / Papá" required autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label>Teléfono (WhatsApp)</label>
+            <input type="tel" id="faro-input-phone" placeholder="Ej: +58 412 123 4567" required autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label>Avatar</label>
+            <div class="emoji-picker">
+              <label class="emoji-opt"><input type="radio" name="faro-emoji" value="👩" checked> <span>👩</span></label>
+              <label class="emoji-opt"><input type="radio" name="faro-emoji" value="👧"> <span>👧</span></label>
+              <label class="emoji-opt"><input type="radio" name="faro-emoji" value="👦"> <span>👦</span></label>
+              <label class="emoji-opt"><input type="radio" name="faro-emoji" value="👨"> <span>👨</span></label>
+              <label class="emoji-opt"><input type="radio" name="faro-emoji" value="👮‍♀️"> <span>👮‍♀️</span></label>
+              <label class="emoji-opt"><input type="radio" name="faro-emoji" value="❤️"> <span>❤️</span></label>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" onclick="cerrarModalFaro()">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar Faro</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- TOAST DE NOTIFICACIÓN -->
+    <div class="toast" id="toast">
+      <span class="toast-icon" id="toast-icon">✅</span>
+      <span class="toast-text" id="toast-text">Acción completada</span>
+    </div>
+
+  </div><!-- /phone -->
+</div><!-- /phone-container -->
+
+<script src="app.js"></script>
+</body>
+</html>
