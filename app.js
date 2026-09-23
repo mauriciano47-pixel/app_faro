@@ -23,12 +23,24 @@ function generarEstrellas() {
   }
 }
 
-/** Actualiza el reloj de la barra de estado */
+/** Actualiza el reloj de la barra de estado y el saludo horario */
 function actualizarReloj() {
   const now = new Date();
-  const h = String(now.getHours()).padStart(2, '0');
+  const hours = now.getHours();
+  const h = String(hours).padStart(2, '0');
   const m = String(now.getMinutes()).padStart(2, '0');
   document.getElementById('status-clock').textContent = `${h}:${m}`;
+
+  const greetingSub = document.getElementById('greeting-sub');
+  if (greetingSub) {
+    if (hours >= 6 && hours < 12) {
+      greetingSub.textContent = 'Buenos días,';
+    } else if (hours >= 12 && hours < 20) {
+      greetingSub.textContent = 'Buenas tardes,';
+    } else {
+      greetingSub.textContent = 'Buenas noches,';
+    }
+  }
 }
 
 /** Muestra un toast de notificación */
@@ -486,7 +498,7 @@ function enviarAlertaWhatsApp() {
   const lng = ubicacionActual.lng.toFixed(6);
   const mapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
   const mensaje = encodeURIComponent(
-    `🚨 ¡ALERTA S.O.S. DE FARO!\n` +
+    `🚨 ¡ALERTA S.O.S. DE CARLA (FARO)!\n` +
     `Necesito ayuda urgente. Mi ubicación en tiempo real es:\n` +
     `${mapsUrl}\n\n` +
     `Por favor comunícate conmigo de inmediato.`
@@ -740,7 +752,7 @@ function handleMotion(event) {
         shakeCount++;
         lastShakeTime = current;
 
-        // Feedback táctil suave para que Tamara sepa que el celular está detectando el agitar
+        // Feedback táctil suave para que Carla sepa que el celular está detectando el agitar
         if (navigator.vibrate) navigator.vibrate(60);
 
         if (shakeCount >= SHAKE_LIMIT) {
@@ -798,7 +810,7 @@ function handleVisibilityChange() {
   visibilityTimestamps = visibilityTimestamps.filter(t => (current - t) < 4000);
 
   // Cada bloqueo/desbloqueo completo representa 2 transiciones (hidden -> visible o visible -> hidden).
-  // Si Tamara presiona el botón Power 4 veces rápidamente:
+  // Si Carla presiona el botón Power 4 veces rápidamente:
   // Presión 1: Apaga pantalla (1)
   // Presión 2: Enciende pantalla (2)
   // Presión 3: Apaga pantalla (3)
