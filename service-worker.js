@@ -1,4 +1,4 @@
-const CACHE_NAME = 'faro-cache-v2';
+const CACHE_NAME = 'faro-cache-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -8,23 +8,24 @@ const ASSETS_TO_CACHE = [
   './icon.png'
 ];
 
-// Instalar Service Worker y guardar recursos en caché
+// Instalar Service Worker y forzar activación inmediata
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
-  self.skipWaiting();
 });
 
-// Activar Service Worker y limpiar cachés antiguas
+// Activar Service Worker, reclamar clientes y purgar cachés antiguas
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cache) => {
           if (cache !== CACHE_NAME) {
+            console.log('Purgando caché antigua:', cache);
             return caches.delete(cache);
           }
         })
@@ -34,26 +35,42 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Responder peticiones usando la caché con estrategia resiliente
+// Estrategia Network-First para HTML (navegación) y Cache-First con fallback para recursos estáticos
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request)
+  // Si la petición es el documento HTML o navegación, siempre buscar primero en la red
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
         .then((networkResponse) => {
-          // Si es un asset local o mapa exitoso, podemos opcionalmente cachearlo
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
           return networkResponse;
         })
         .catch(() => {
-          // Fallback en caso de estar offline y no encontrar en caché
-          if (event.request.destination === 'document') {
-            return caches.match('./index.html') || caches.match('index.html');
+          return caches.match(event.request) || caches.match('./index.html');
+        })
+    );
+    return;
+  }
+
+  // Para otros assets (css, js, imágenes): responder de caché si existe, actualizando en segundo plano
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
-        });
+          return networkResponse;
+        })
+        .catch(() => cachedResponse);
+
+      return cachedResponse || fetchPromise;
     })
   );
 });
