@@ -999,5 +999,5 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(inicializarMapa, 100);
   }
 
-  console.log('🔦 Faro App · v1.5.0 Producción Web – Inicializado correctamente');
+  console.log('🔦 Faro App · v1.5.2 App Oficial Fortificada – Inicializado correctamente');
 });
