@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "name": "faro-app",
+  "framework": null,
+  "buildCommand": "",
+  "installCommand": "",
+  "outputDirectory": "."
+}

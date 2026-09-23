@@ -1001,3 +1001,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
   console.log('🔦 Faro App · v1.5.2 App Oficial Fortificada – Inicializado correctamente');
 });
+
+// ─── GESTIÓN DE INSTALACIÓN PWA (INDEPENDIENTE) ─────────────────────────────
+let deferredFaroPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredFaroPrompt = e;
+  const banner = document.getElementById('install-pwa-banner');
+  if (banner && !window.matchMedia('(display-mode: standalone)').matches) {
+    banner.style.display = 'flex';
+  }
+});
+
+function instalarPwaDesdeApp() {
+  if (deferredFaroPrompt) {
+    deferredFaroPrompt.prompt();
+    deferredFaroPrompt.userChoice.then((choice) => {
+      if (choice.outcome === 'accepted') {
+        const banner = document.getElementById('install-pwa-banner');
+        if (banner) banner.style.display = 'none';
+        mostrarToast('🎉 ¡Faro instalado en tu pantalla con éxito!');
+      }
+      deferredFaroPrompt = null;
+    });
+  } else {
+    window.location.href = './download.html';
+  }
+}
+

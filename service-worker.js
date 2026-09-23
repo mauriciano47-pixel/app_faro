@@ -1,7 +1,8 @@
-const CACHE_NAME = 'faro-cache-v3';
+const CACHE_NAME = 'faro-cache-v4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
+  './download.html',
   './style.css',
   './app.js',
   './manifest.json',
