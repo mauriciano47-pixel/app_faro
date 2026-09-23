@@ -207,31 +207,71 @@ let sosActive = false;
 
 function activarSOS() {
   if (sosActive) return;
-  document.getElementById('sos-overlay').classList.add('active');
+  const overlay = document.getElementById('sos-overlay');
+  if (overlay) overlay.classList.add('active');
   sosActive = true;
   let cuenta = 5;
-  document.getElementById('sos-countdown').textContent = cuenta;
+
+  const countdownEl = document.getElementById('sos-countdown');
+  const titleEl = document.querySelector('.sos-active-title');
+  const subEl = document.getElementById('sos-active-sub');
+
+  if (countdownEl) {
+    countdownEl.style.display = '';
+    countdownEl.textContent = cuenta;
+  }
+  if (titleEl) titleEl.textContent = '¡S.O.S. ACTIVADO!';
+  if (subEl) subEl.innerHTML = 'Transmitiendo auxilio automático en <b style="color:var(--accent-coral)">5 segundos</b>...<br/>Toca cancelar si fue un error.';
 
   // Iniciar sirena disuasoria automáticamente durante la cuenta de emergencia
   iniciarSirena();
 
+  // Vibración háptica continua si el dispositivo lo soporta
+  if (navigator.vibrate) {
+    try { navigator.vibrate([200, 100, 200, 100, 400]); } catch(e){}
+  }
+
   sosCountdownTimer = setInterval(() => {
     cuenta--;
-    document.getElementById('sos-countdown').textContent = cuenta;
+    if (countdownEl) countdownEl.textContent = cuenta;
+    if (subEl && cuenta > 0) {
+      subEl.innerHTML = `Transmitiendo auxilio automático en <b style="color:var(--accent-coral)">${cuenta} segundos</b>...<br/>Toca cancelar si fue un error.`;
+    }
+
     if (cuenta <= 0) {
       clearInterval(sosCountdownTimer);
-      document.getElementById('sos-countdown').style.display = 'none';
+      sosCountdownTimer = null;
+      if (countdownEl) countdownEl.style.display = 'none';
+      if (titleEl) titleEl.textContent = '¡S.O.S. TRANSMITIDO!';
+      if (subEl) subEl.innerHTML = '¡Alerta enviada a tus Faros de confianza con tu geolocalización precisa!<br/>La ayuda está en camino.';
       mostrarToast('🚨', '¡Alerta enviada! Faros notificados con tu ubicación');
+      
+      // Auto-enviar alerta de WhatsApp a los contactos de confianza
+      enviarAlertaWhatsApp();
     }
   }, 1000);
 }
 
 function cancelarSOS() {
-  clearInterval(sosCountdownTimer);
+  if (sosCountdownTimer) {
+    clearInterval(sosCountdownTimer);
+    sosCountdownTimer = null;
+  }
   detenerSirena();
-  document.getElementById('sos-overlay').classList.remove('active');
-  document.getElementById('sos-countdown').style.display = '';
-  document.getElementById('sos-countdown').textContent = '5';
+  const overlay = document.getElementById('sos-overlay');
+  if (overlay) overlay.classList.remove('active');
+
+  const countdownEl = document.getElementById('sos-countdown');
+  const titleEl = document.querySelector('.sos-active-title');
+  const subEl = document.getElementById('sos-active-sub');
+
+  if (countdownEl) {
+    countdownEl.style.display = '';
+    countdownEl.textContent = '5';
+  }
+  if (titleEl) titleEl.textContent = '¡S.O.S. ENVIADO!';
+  if (subEl) subEl.innerHTML = 'Tu ubicación fue enviada a tus Faros de confianza.<br/>Llegará ayuda de inmediato.';
+
   sosActive = false;
   mostrarToast('✅', 'Alerta cancelada. ¡Estás a salvo!');
 }
@@ -257,18 +297,47 @@ function activarAlarma() {
   }
 }
 
-function modoDiscreto() {
-  detenerSirena();
-  mostrarToast('🤫', 'Modo discreto ON · Tus Faros fueron alertados en silencio');
+let modoDiscretoActivo = false;
+
+function toggleModoDiscreto() {
   const card = document.querySelectorAll('.quick-card.discreta')[0];
-  if (card) {
-    card.style.borderColor = 'var(--accent-coral)';
-    card.style.background = 'rgba(255,79,114,0.12)';
-    setTimeout(() => {
+  const statusDot = document.querySelector('.status-dot');
+  const statusTitle = document.querySelector('.status-title');
+  const statusSub = document.querySelector('.status-sub');
+
+  modoDiscretoActivo = !modoDiscretoActivo;
+
+  if (modoDiscretoActivo) {
+    detenerSirena();
+    if (navigator.vibrate) {
+      try { navigator.vibrate([80, 40, 80]); } catch (e) {}
+    }
+    mostrarToast('🤫', 'Modo Discreto ACTIVADO · Alerta silenciosa lista');
+    if (card) {
+      card.style.borderColor = 'var(--accent-coral)';
+      card.style.background = 'rgba(255,79,114,0.15)';
+      const descEl = card.querySelector('.quick-desc');
+      if (descEl) descEl.textContent = 'Activo · Toca para apagar';
+    }
+    if (statusDot) statusDot.style.background = 'var(--accent-coral)';
+    if (statusTitle) statusTitle.textContent = 'Modo Discreto Silencioso Activo';
+    if (statusSub) statusSub.textContent = 'Alerta silenciosa enviada a tus 3 Faros';
+  } else {
+    mostrarToast('🛡️', 'Modo Discreto DESACTIVADO · Monitoreo normal');
+    if (card) {
       card.style.borderColor = '';
       card.style.background = '';
-    }, 2000);
+      const descEl = card.querySelector('.quick-desc');
+      if (descEl) descEl.textContent = 'Alerta sin sonido ni pantalla';
+    }
+    if (statusDot) statusDot.style.background = 'var(--accent-teal)';
+    if (statusTitle) statusTitle.textContent = 'Estás segura en casa';
+    if (statusSub) statusSub.textContent = 'Sin rutas activas · Faros disponibles: 3';
   }
+}
+
+function modoDiscreto() {
+  toggleModoDiscreto();
 }
 
 // ─── MAPA LEAFLET (RUTA SEGURA) ───────────────────────────────────────────────
@@ -321,11 +390,24 @@ function inicializarMapa() {
       scrollWheelZoom: false,
     }).setView(RUTA_COMPLETA[pasoActual], 15);
 
-    // Tile oscuro (CartoDB Dark Matter)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    // Proveedor nocturno de alta disponibilidad 100% libre sin API key (ESRI World Dark Gray Base + OSM Fallback)
+    const capaMapaOscuro = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
       maxZoom: 19,
-      subdomains: 'abcd',
-    }).addTo(mapa);
+      maxNativeZoom: 16,
+    });
+
+    capaMapaOscuro.on('tileerror', function() {
+      if (!mapa._hasOsmFallback) {
+        mapa._hasOsmFallback = true;
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(mapa);
+      }
+    });
+
+    capaMapaOscuro.addTo(mapa);
   } catch (err) {
     console.error('Error al inicializar Leaflet:', err);
     return;
@@ -497,8 +579,11 @@ function enviarAlertaWhatsApp() {
   const lat = ubicacionActual.lat.toFixed(6);
   const lng = ubicacionActual.lng.toFixed(6);
   const mapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
+  const nombreEl = document.getElementById('greeting-name');
+  const nombreUsuaria = nombreEl ? nombreEl.textContent.replace(/[^\w\s]/gi, '').trim() : 'Carla';
+
   const mensaje = encodeURIComponent(
-    `🚨 ¡ALERTA S.O.S. DE CARLA (FARO)!\n` +
+    `🚨 ¡ALERTA S.O.S. DE ${nombreUsuaria.toUpperCase()} (FARO)!\n` +
     `Necesito ayuda urgente. Mi ubicación en tiempo real es:\n` +
     `${mapsUrl}\n\n` +
     `Por favor comunícate conmigo de inmediato.`
@@ -509,8 +594,17 @@ function enviarAlertaWhatsApp() {
     whatsappUrl += `&phone=${destino}`;
   }
 
-  window.open(whatsappUrl, '_blank');
-  mostrarToast('💬', 'Abriendo WhatsApp con alerta de auxilio...');
+  const btnWhatsApp = document.getElementById('sos-whatsapp-btn');
+  if (btnWhatsApp) {
+    btnWhatsApp.href = whatsappUrl;
+  }
+
+  try {
+    window.open(whatsappUrl, '_blank');
+  } catch (e) {
+    console.warn('Popup bloqueado, el botón en pantalla ya contiene el enlace:', e);
+  }
+  mostrarToast('💬', 'Alerta preparada · Abriendo WhatsApp...');
 }
 
 // ─── TEMPORIZADOR DE SEGURIDAD ────────────────────────────────────────────────
