@@ -253,27 +253,29 @@ function activarSOS() {
 }
 
 function cancelarSOS() {
-  if (sosCountdownTimer) {
-    clearInterval(sosCountdownTimer);
-    sosCountdownTimer = null;
-  }
-  detenerSirena();
-  const overlay = document.getElementById('sos-overlay');
-  if (overlay) overlay.classList.remove('active');
+  solicitarPIN(() => {
+    if (sosCountdownTimer) {
+      clearInterval(sosCountdownTimer);
+      sosCountdownTimer = null;
+    }
+    detenerSirena();
+    const overlay = document.getElementById('sos-overlay');
+    if (overlay) overlay.classList.remove('active');
 
-  const countdownEl = document.getElementById('sos-countdown');
-  const titleEl = document.querySelector('.sos-active-title');
-  const subEl = document.getElementById('sos-active-sub');
+    const countdownEl = document.getElementById('sos-countdown');
+    const titleEl = document.querySelector('.sos-active-title');
+    const subEl = document.getElementById('sos-active-sub');
 
-  if (countdownEl) {
-    countdownEl.style.display = '';
-    countdownEl.textContent = '5';
-  }
-  if (titleEl) titleEl.textContent = '¡S.O.S. ENVIADO!';
-  if (subEl) subEl.innerHTML = 'Tu ubicación fue enviada a tus Faros de confianza.<br/>Llegará ayuda de inmediato.';
+    if (countdownEl) {
+      countdownEl.style.display = '';
+      countdownEl.textContent = '5';
+    }
+    if (titleEl) titleEl.textContent = '¡S.O.S. ENVIADO!';
+    if (subEl) subEl.innerHTML = 'Tu ubicación fue enviada a tus Faros de confianza.<br/>Llegará ayuda de inmediato.';
 
-  sosActive = false;
-  mostrarToast('✅', 'Alerta cancelada. ¡Estás a salvo!');
+    sosActive = false;
+    mostrarToast('✅', 'Alerta cancelada. ¡Estás a salvo!');
+  });
 }
 
 // ─── BOTONES RÁPIDOS DEL HOME ─────────────────────────────────────────────────
@@ -281,12 +283,14 @@ function cancelarSOS() {
 function activarAlarma() {
   const card = document.querySelectorAll('.quick-card.alarma')[0];
   if (sirenaSonando) {
-    detenerSirena();
-    mostrarToast('🔇', 'Sirena disuasoria apagada');
-    if (card) {
-      card.style.borderColor = '';
-      card.style.background = '';
-    }
+    solicitarPIN(() => {
+      detenerSirena();
+      mostrarToast('🔇', 'Sirena disuasoria apagada');
+      if (card) {
+        card.style.borderColor = '';
+        card.style.background = '';
+      }
+    });
   } else {
     iniciarSirena();
     mostrarToast('🔊', '¡Sirena disuasoria activada! Toca para apagar');
@@ -305,9 +309,8 @@ function toggleModoDiscreto() {
   const statusTitle = document.querySelector('.status-title');
   const statusSub = document.querySelector('.status-sub');
 
-  modoDiscretoActivo = !modoDiscretoActivo;
-
-  if (modoDiscretoActivo) {
+  if (!modoDiscretoActivo) { // Activando
+    modoDiscretoActivo = true;
     detenerSirena();
     if (navigator.vibrate) {
       try { navigator.vibrate([80, 40, 80]); } catch (e) {}
@@ -322,17 +325,20 @@ function toggleModoDiscreto() {
     if (statusDot) statusDot.style.background = 'var(--accent-coral)';
     if (statusTitle) statusTitle.textContent = 'Modo Discreto Silencioso Activo';
     if (statusSub) statusSub.textContent = 'Alerta silenciosa enviada a tus 3 Faros';
-  } else {
-    mostrarToast('🛡️', 'Modo Discreto DESACTIVADO · Monitoreo normal');
-    if (card) {
-      card.style.borderColor = '';
-      card.style.background = '';
-      const descEl = card.querySelector('.quick-desc');
-      if (descEl) descEl.textContent = 'Alerta sin sonido ni pantalla';
-    }
-    if (statusDot) statusDot.style.background = 'var(--accent-teal)';
-    if (statusTitle) statusTitle.textContent = 'Estás segura en casa';
-    if (statusSub) statusSub.textContent = 'Sin rutas activas · Faros disponibles: 3';
+  } else { // Desactivando
+    solicitarPIN(() => {
+      modoDiscretoActivo = false;
+      mostrarToast('🛡️', 'Modo Discreto DESACTIVADO · Monitoreo normal');
+      if (card) {
+        card.style.borderColor = '';
+        card.style.background = '';
+        const descEl = card.querySelector('.quick-desc');
+        if (descEl) descEl.textContent = 'Alerta sin sonido ni pantalla';
+      }
+      if (statusDot) statusDot.style.background = 'var(--accent-teal)';
+      if (statusTitle) statusTitle.textContent = 'Estás segura en casa';
+      if (statusSub) statusSub.textContent = 'Sin rutas activas · Faros disponibles: 3';
+    });
   }
 }
 
@@ -1120,6 +1126,97 @@ function instalarPwaDesdeApp() {
     });
   } else {
     window.location.href = './download.html';
+  }
+}
+
+
+// ─── MÓDULO DE ONBOARDING Y SEGURIDAD PIN ─────────────────────────────────────
+
+let faroUserProfile = null;
+let accionPendientePin = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const guardado = localStorage.getItem('faro_user_profile');
+  const overlay = document.getElementById('onboarding-overlay');
+  
+  if (guardado) {
+    try {
+      faroUserProfile = JSON.parse(guardado);
+      if (overlay) overlay.style.display = 'none';
+      const nameEl = document.getElementById('greeting-name');
+      if (nameEl) nameEl.textContent = faroUserProfile.nombre + ' 🌟';
+    } catch(e) {}
+  } else {
+    if (overlay) overlay.style.display = 'flex';
+  }
+});
+
+function completarRegistro(e) {
+  e.preventDefault();
+  const nombre = document.getElementById('reg-name').value.trim();
+  const pin = document.getElementById('reg-pin').value.trim();
+  
+  if (nombre && pin.length === 4) {
+    faroUserProfile = { nombre, pin };
+    localStorage.setItem('faro_user_profile', JSON.stringify(faroUserProfile));
+    
+    const nameEl = document.getElementById('greeting-name');
+    if (nameEl) nameEl.textContent = faroUserProfile.nombre + ' 🌟';
+    
+    const overlay = document.getElementById('onboarding-overlay');
+    if (overlay) overlay.style.opacity = '0';
+    setTimeout(() => {
+      if (overlay) overlay.style.display = 'none';
+      mostrarToast('🎉', '¡Bienvenida a Faro, ' + nombre + '!');
+    }, 400);
+  }
+}
+
+function solicitarPIN(callback) {
+  if (!faroUserProfile || !faroUserProfile.pin) {
+    callback();
+    return;
+  }
+  accionPendientePin = callback;
+  const modal = document.getElementById('modal-pin-auth');
+  const input = document.getElementById('auth-pin');
+  const error = document.getElementById('auth-pin-error');
+  
+  if (error) error.style.display = 'none';
+  if (input) input.value = '';
+  if (modal) modal.classList.add('active');
+  if (input) setTimeout(() => input.focus(), 100);
+}
+
+function cerrarModalPin() {
+  accionPendientePin = null;
+  const modal = document.getElementById('modal-pin-auth');
+  if (modal) modal.classList.remove('active');
+}
+
+function chequearPinAutomatico(val) {
+  if (val.length === 4) {
+    verificarPin();
+  }
+}
+
+function verificarPin() {
+  const input = document.getElementById('auth-pin');
+  const error = document.getElementById('auth-pin-error');
+  
+  if (faroUserProfile && input.value === faroUserProfile.pin) {
+    cerrarModalPin();
+    if (accionPendientePin) {
+      accionPendientePin();
+      accionPendientePin = null;
+    }
+  } else {
+    if (error) error.style.display = 'block';
+    input.value = '';
+    input.focus();
+    if (navigator.vibrate) {
+      try { navigator.vibrate([100, 100, 100]); } catch(e){}
+    }
   }
 }
 

@@ -1238,3 +1238,47 @@ body::before {
   transform: scale(1.05);
 }
 
+
+/* =========================================
+   ONBOARDING Y REGISTRO
+   ========================================= */
+.onboarding-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 300;
+  background: #07050f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  transition: opacity 0.4s ease;
+}
+.onboarding-content {
+  width: 100%;
+  max-width: 320px;
+}
+.onboarding-logo {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--accent-teal);
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.onboarding-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 8px;
+  text-align: center;
+  line-height: 1.2;
+}
+.onboarding-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
