@@ -12,4 +12,3 @@ Faro es una Aplicación Web Progresiva (PWA) Offline-First diseñada para brinda
 
 ## Despliegue
 Desplegado automáticamente vía GitHub Pages y Cloudflare Pages. No requiere API Keys externas.
-
