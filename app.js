@@ -221,7 +221,7 @@ function activarSOS() {
     countdownEl.textContent = cuenta;
   }
   if (titleEl) titleEl.textContent = '¡S.O.S. ACTIVADO!';
-  if (subEl) subEl.innerHTML = 'Transmitiendo auxilio automático en <b style="color:var(--accent-coral)">5 segundos</b>...<br/>Toca cancelar si fue un error.';
+  if (subEl) subEl.textContent = 'Transmitiendo auxilio automático en 5 segundos...\nToca cancelar si fue un error.';
 
   // Iniciar sirena disuasoria automáticamente durante la cuenta de emergencia
   iniciarSirena();
@@ -235,7 +235,7 @@ function activarSOS() {
     cuenta--;
     if (countdownEl) countdownEl.textContent = cuenta;
     if (subEl && cuenta > 0) {
-      subEl.innerHTML = `Transmitiendo auxilio automático en <b style="color:var(--accent-coral)">${cuenta} segundos</b>...<br/>Toca cancelar si fue un error.`;
+      subEl.textContent = `Transmitiendo auxilio automático en ${cuenta} segundos...\nToca cancelar si fue un error.`;
     }
 
     if (cuenta <= 0) {
@@ -243,7 +243,7 @@ function activarSOS() {
       sosCountdownTimer = null;
       if (countdownEl) countdownEl.style.display = 'none';
       if (titleEl) titleEl.textContent = '¡S.O.S. TRANSMITIDO!';
-      if (subEl) subEl.innerHTML = '¡Alerta enviada a tus Faros de confianza con tu geolocalización precisa!<br/>La ayuda está en camino.';
+      if (subEl) subEl.textContent = '¡Alerta enviada a tus Faros de confianza con tu geolocalización precisa!\nLa ayuda está en camino.';
       mostrarToast('🚨', '¡Alerta enviada! Faros notificados con tu ubicación');
       
       // Auto-enviar alerta de WhatsApp a los contactos de confianza
@@ -271,7 +271,7 @@ function cancelarSOS() {
       countdownEl.textContent = '5';
     }
     if (titleEl) titleEl.textContent = '¡S.O.S. ENVIADO!';
-    if (subEl) subEl.innerHTML = 'Tu ubicación fue enviada a tus Faros de confianza.<br/>Llegará ayuda de inmediato.';
+    if (subEl) subEl.textContent = 'Tu ubicación fue enviada a tus Faros de confianza.\nLlegará ayuda de inmediato.';
 
     sosActive = false;
     mostrarToast('✅', 'Alerta cancelada. ¡Estás a salvo!');
@@ -662,12 +662,14 @@ function toggleTimer() {
   timerRunning = !timerRunning;
   const btn = document.getElementById('timer-toggle-btn');
   if (timerRunning) {
-    btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.5;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Pausar`;
+    btn.textContent = '';
+    btn.insertAdjacentHTML('beforeend', `<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.5;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Pausar`);
     document.getElementById('timer-status-badge').textContent = 'ACTIVO';
     document.getElementById('timer-status-badge').style.color = 'var(--accent-teal)';
     mostrarToast('▶️', 'Temporizador reanudado');
   } else {
-    btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.5;"><polygon points="5 3 19 12 5 21 5 3"/></svg> Reanudar`;
+    btn.textContent = '';
+    btn.insertAdjacentHTML('beforeend', `<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.5;"><polygon points="5 3 19 12 5 21 5 3"/></svg> Reanudar`);
     document.getElementById('timer-status-badge').textContent = 'PAUSADO';
     document.getElementById('timer-status-badge').style.color = 'var(--accent-amber)';
     mostrarToast('⏸', 'Temporizador pausado');
@@ -684,7 +686,8 @@ function resetTimer() {
   document.getElementById('timer-progress').style.background =
     'linear-gradient(90deg, var(--accent-teal), #00b09b)';
   const btn = document.getElementById('timer-toggle-btn');
-  btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.5;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Pausar`;
+  btn.textContent = '';
+  btn.insertAdjacentHTML('beforeend', `<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.5;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Pausar`);
   actualizarTimerUI();
   mostrarToast('🔄', 'Temporizador reiniciado a 20 minutos');
 }
@@ -969,7 +972,7 @@ function renderizarFaros() {
   faros.forEach((faro) => {
     const card = document.createElement('div');
     card.className = 'faro-card';
-    card.innerHTML = `
+    card.insertAdjacentHTML('beforeend', `
       <div class="contact-avatar" style="width:46px;height:46px;font-size:20px;flex-shrink:0;background:linear-gradient(135deg, #5b21b6, #7c3aed);">${faro.emoji || '👤'}</div>
       <div class="faro-info">
         <div class="faro-name">${faro.nombre}</div>
@@ -980,7 +983,7 @@ function renderizarFaros() {
           <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38C1.58 2.3 2.36 1.32 3.44 1H6a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.09 8.91A16 16 0 0 0 15 16.91l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
         </a>
         ${!faro.fijo ? `
-        <button class="faro-action-icon faro-del" onclick="eliminarFaro('${faro.id}')" title="Eliminar">
+        
           <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
         ` : `
