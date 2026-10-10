@@ -1,0 +1,19 @@
+{
+  "name": "faro-app",
+  "version": "1.7.0",
+  "description": "Sistema de Seguridad Personal, Alerta SOS y Geolocalización de Emergencias (Tu Seguridad, Tu Luz)",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "seguridad-personal",
+    "sos",
+    "geolocalizacion",
+    "emergencias",
+    "offline-first",
+    "pwa"
+  ],
+  "author": "Mauricio Uribe Maldonado",
+  "license": "Proprietary"
+}
