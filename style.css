@@ -1097,6 +1097,17 @@ body::before {
   background: rgba(255,255,255,0.09);
 }
 
+/* Form Shield: Neutralización canónica de autofill en tema oscuro */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #0e0a1e inset !important;
+  -webkit-text-fill-color: #f0eeff !important;
+  caret-color: #f0eeff !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 .emoji-picker {
   display: flex;
   gap: 8px;

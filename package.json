@@ -1,6 +1,6 @@
 {
   "name": "faro-app",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Sistema de Seguridad Personal, Alerta SOS y Geolocalización de Emergencias (Tu Seguridad, Tu Luz)",
   "type": "module",
   "scripts": {
