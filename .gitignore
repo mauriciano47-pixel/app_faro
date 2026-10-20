@@ -6,3 +6,6 @@ Thumbs.db
 # V-GUARD Auto-Hardening
 .env
 scratch/
+
+.github/workflows/
+

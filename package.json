@@ -1,10 +1,16 @@
 {
   "name": "faro-app",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "Sistema de Seguridad Personal, Alerta SOS y Geolocalización de Emergencias (Tu Seguridad, Tu Luz)",
   "type": "module",
   "scripts": {
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "test:coverage": "node --experimental-test-coverage --test tests/runtimeContracts.test.js tests/monetizationContracts.test.js tests/propertyFuzzing.test.js tests/chaosEngineering.test.js",
+    "test:mutation": "node ./scripts/mutation-audit.mjs",
+    "prepush": "node ./scripts/pre-push-gate.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
   },
   "keywords": [
     "seguridad-personal",
