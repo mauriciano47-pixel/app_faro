@@ -1,0 +1,10 @@
+{
+  "extends": [
+    "development"
+  ],
+  "hints": {
+    "axe/forms": "error",
+    "axe/aria": "error",
+    "no-bom": "error"
+  }
+}
